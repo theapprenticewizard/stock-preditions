@@ -1,10 +1,18 @@
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.datavec.api.records.reader.impl.csv.CSVLineSequenceRecordReader;
 import org.datavec.api.transform.TransformProcess;
 import org.datavec.api.transform.schema.Schema;
+import org.datavec.api.writable.Writable;
+import org.datavec.spark.transform.SparkTransformExecutor;
+import org.datavec.spark.transform.misc.StringToWritablesFunction;
 import org.joda.time.DateTimeZone;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 public class Application {
 
@@ -19,7 +27,27 @@ public class Application {
     public static void printPredictions(String path) {
         try(InputStream is = new FileInputStream(path)) {
 
-            // load the file here
+
+            SparkConf conf = new SparkConf();
+
+            // set spark to run locally with `n` threads, where n is the amount of logical cores on the host CPU
+            // alternatively for a single thread, you can run spark with a single core by running local[1] instead
+            conf.setMaster("local[*]");
+            conf.setAppName("Stock Price Predictor");
+
+            // Allows native java to run using apparent native Collections but returns JavaRDD.
+            JavaSparkContext sCtx = new JavaSparkContext(conf);
+
+            // JavaRDD is a specific type for dealing with Resilient Distributed Datasets.
+            JavaRDD<String> raw = sCtx.textFile(path);
+
+            JavaRDD<List<Writable>> preProcessed = raw.map(new StringToWritablesFunction(new CSVLineSequenceRecordReader()));
+
+            // execute the finished result
+            JavaRDD<List<Writable>> processed = new SparkTransformExecutor().execute(preProcessed, createYahooFinanceTransformProcess());
+
+
+            System.out.println(processed.toString());
 
         } catch (IOException e) {
             e.printStackTrace();
