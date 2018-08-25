@@ -10,5 +10,5 @@ Predicting stock prices using RNN and LSTM.  We will train our model from stock 
 * [Deep Learning4J RNN/LSTM docs](https://deeplearning4j.org/docs/latest/deeplearning4j-nn-recurrent)
 
 ## Authors
-* Jun Yeong Yu @unyeongyu
+* Jun Yeong Yu @junyeongyu
 * Raymond Dinkin @theapprenticewizard
